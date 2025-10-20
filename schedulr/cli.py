@@ -20,7 +20,7 @@ from rich.console import Console
 from pyfiglet import figlet_format
 
 from .core import Database
-from .screens import CalendarScreen
+from .screens import CalendarScreen , SettingsModal
 import random
 
 import sqlite3
@@ -320,6 +320,10 @@ class Home(App):
     @on(Button.Pressed, "#nav-calendar")
     async def open_calendar(self):
         self.push_screen(CalendarScreen())
+        
+    @on(Button.Pressed, "#nav-settings")
+    async def open_settings(self):
+        self.push_screen(SettingsModal())
 
     # handle  add new task
 
@@ -672,4 +676,6 @@ class AddTaskModal(ModalScreen[Optional[Dict[str, Any]]]):
 # TODO:
 
 
+ 
 app = Home().run()
+    

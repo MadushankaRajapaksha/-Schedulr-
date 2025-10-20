@@ -767,18 +767,37 @@ class CalendarScreen(Screen):
         """Refresh the calendar display"""
         # Reload tasks
         self.all_tasks = self.get_all_tasks_by_date()
-        
+
         # Remove and rebuild calendar
         calendar_container = self.query_one("#calendar-container", ScrollableContainer)
         calendar_container.remove_children()
-        
-        # Mount new widgets
-        for widget in self.create_calendar_widgets(
-            self.current_date.year, 
-            self.current_date.month
-        ):
-            calendar_container.mount(widget)
-        
-        # Update month display
-        month_display = self.query_one("#month-display", Static)
-        month_display.update(f"{self.current_date.strftime('%B %Y')}")
+
+        # Mount new widgets using compose-style mounting
+        try:
+            # Create a temporary list to hold widgets
+            widgets = []
+            for widget in self.create_calendar_widgets(
+                self.current_date.year,
+                self.current_date.month
+            ):
+                widgets.append(widget)
+
+            # Mount all widgets at once
+            calendar_container.compose_add_child(*widgets)
+        except Exception as e:
+            # Fallback: recreate the entire screen if mounting fails
+            try:
+                self.app.pop_screen()
+                new_calendar = CalendarScreen()
+                new_calendar.current_date = self.current_date  # Preserve the date
+                self.app.push_screen(new_calendar)
+            except Exception:
+                pass  # If all else fails, just continue
+            return
+
+        # Update month display in header navigation
+        try:
+            month_display = self.query_one("#month-display", Static)
+            month_display.update(f"{self.current_date.strftime('%B %Y')}")
+        except Exception:
+            pass  # If element not found, continue silently
