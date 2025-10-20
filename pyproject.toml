@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "schedulr"
+version = "0.1.0"
+description = "A smart terminal scheduler with natural language input and ASCII calendar visualization."
+readme = "README.md"
+authors = [
+  { name="madushnaka rajapakshe", email="your@email.com" }
+]
+license = { text = "MIT" }
+requires-python = ">=3.8"
+dependencies = [
+   "rich",
+   "typer",
+   "dateparser",
+   "schedule",
+   "plyer",
+   "pystray",
+   "Pillow"
+]
+
+[project.scripts]
+schedulr = "schedulr.cli:app"

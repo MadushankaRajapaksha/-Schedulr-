@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: schedulr
+Version: 0.1.0
+Summary: A smart terminal scheduler with natural language input and ASCII calendar visualization.
+Author-email: madushnaka rajapakshe <your@email.com>
+License: MIT
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: rich
+Requires-Dist: typer
+Requires-Dist: dateparser
+Requires-Dist: schedule
+Requires-Dist: plyer
