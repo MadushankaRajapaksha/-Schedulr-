@@ -278,7 +278,7 @@ class Home(App):
                 yield NavButton("🏠", "Home", id="nav-home", classes="nav-button")
                 yield NavButton("➕", "Add Task", id="nav-add", classes="nav-button")
                 yield NavButton("📅", "Calendar", id="nav-calendar", classes="nav-button")
-                yield NavButton("🎨", "Attendance", id="nav-attendance", classes="nav-button")
+                 
                 yield NavButton("⚙️", "Settings", id="nav-settings", classes="nav-button")
 
             with Vertical(id="right-content"):
