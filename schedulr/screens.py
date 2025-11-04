@@ -1,5 +1,5 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, Static, Button, DataTable, Label
+from textual.widgets import Header, Footer, Static, Button, DataTable, Label, Input
 from textual.containers import Container, Vertical, Horizontal, ScrollableContainer, VerticalScroll
 from textual.screen import Screen, ModalScreen
 from textual.binding import Binding
@@ -36,8 +36,8 @@ class TaskModal(ModalScreen):
     }
     
     #modal-container {
-        width: 70%;
-        height: 70%;
+        width: 100%;
+        height: 100%;
         background: $surface;
         border: thick $primary;
         padding: 1;
@@ -58,11 +58,13 @@ class TaskModal(ModalScreen):
     }
     
     .task-item {
-        height: auto;
+        layout: horizontal;
+         
         padding: 1;
-        margin-bottom: 1;
+         
         background: $panel;
         border: solid $primary 50%;
+        align: center middle;
     }
     
     .task-item.-completed {
@@ -80,6 +82,22 @@ class TaskModal(ModalScreen):
     
     .task-status {
         padding: 0 1;
+    }
+
+    .task-buttons {
+        width: auto;
+        height: auto;
+        dock: right;
+        margin-left: 1;
+    }
+
+    .edit-button {
+        margin-right: 1;
+        background: $warning;
+    }
+
+    .delete-button {
+        background: $error;
     }
     
     #modal-footer {
@@ -119,20 +137,24 @@ class TaskModal(ModalScreen):
                         task_time = task["date_time"].split(" ")[1] if task["date_time"] else "No time"
                         
                         with Container(classes="task-item"):
-                            if task.get("status") and task["status"].lower() == "completed":
+                            with Vertical():
+                                if task.get("status") and task["status"].lower() == "completed":
+                                    yield Static(
+                                        f"{status_symbol} {task['title']}",
+                                        classes="task-title -completed"
+                                    )
+                                else:
+                                    yield Static(
+                                        f"{status_symbol} {task['title']}",
+                                        classes="task-title"
+                                    )
                                 yield Static(
-                                    f"{status_symbol} {task['title']}",
-                                    classes="task-title -completed"
+                                    f"Time: {task_time}",
+                                    classes="task-time"
                                 )
-                            else:
-                                yield Static(
-                                    f"{status_symbol} {task['title']}",
-                                    classes="task-title"
-                                )
-                            yield Static(
-                                f"Time: {task_time}", 
-                                classes="task-time"
-                            )
+                            with Horizontal(classes="task-buttons"):
+                                yield Button("Edit", variant="warning", classes="edit-button", id=f"edit-{task['id']}")
+                                yield Button("Delete", variant="error", classes="delete-button", id=f"delete-{task['id']}")
                 else:
                     yield Static("No tasks for this day", classes="no-tasks")
             
@@ -140,300 +162,101 @@ class TaskModal(ModalScreen):
                 yield Button("Close", id="close", classes="close-button")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Close the modal"""
-        if event.button.id == "close":
+        """Handle button presses in the modal"""
+        button_id = event.button.id
+        if button_id == "close":
             self.dismiss()
+        elif button_id and button_id.startswith("delete-"):
+            task_id = int(button_id.split("-")[1])
+            db = Database()
+            db.delete_task(task_id)
+            db.close()
+            self.dismiss(True)  # Dismiss and signal a refresh
+        elif button_id and button_id.startswith("edit-"):
+            task_id = int(button_id.split("-")[1])
+            with Database() as db:
+                task_data = db.get_task_by_id(task_id)
+            if task_data:
+                task_dict = {
+                    "id": task_data[0],
+                    "title": task_data[1],
+                    "date_time": task_data[2],
+                    "status": task_data[3],
+                }
+                self.app.push_screen(EditTaskModal(task=task_dict), self.handle_edit_task)
 
 
-class SettingsModal(ModalScreen):
-    """Modal screen for application settings"""
+    def handle_edit_task(self, updated: bool):
+        """Handle the result of the edit modal."""
+        if updated:
+            self.dismiss(True) # Dismiss and signal a refresh
+
+class EditTaskModal(ModalScreen):
+    """Modal screen for editing an existing task"""
 
     CSS = """
-    SettingsModal {
+    EditTaskModal {
         align: center middle;
     }
-
-    #settings-container {
-        width: 80%;
-        height: 80%;
+    #edit-modal-container {
+        width: 80;
+        height: 25;
         background: $surface;
         border: thick $primary;
-        padding: 1;
     }
-
-    #settings-header {
+    #edit-modal-title {
         text-align: center;
         text-style: bold;
-        color: $accent;
         padding: 1;
-        background: $primary;
-        border-bottom: solid $primary-lighten-1;
-    }
-
-    #settings-content {
-        height: 1fr;
-        padding: 1;
-    }
-
-    .setting-item {
-        height: auto;
-        padding: 1;
-        margin-bottom: 1;
-        background: $panel;
-        border: solid $primary 50%;
-    }
-
-    .setting-label {
-        text-style: bold;
-        padding: 0 1;
-    }
-
-    .setting-control {
-        padding: 0 1;
-    }
-
-    .checkbox-setting {
-        layout: horizontal;
-        align: center middle;
-    }
-
-    #settings-footer {
-        layout: horizontal;
-        height: auto;
-        padding: 1;
-        align: center middle;
-    }
-
-    .settings-button {
-        width: 15;
         background: $primary;
         color: $text;
-        margin: 0 1;
     }
-
-    .settings-button:hover {
-        background: $primary-lighten-1;
+    #edit-form {
+        padding: 1 2;
     }
-
-    .close-button {
-        background: $error;
+    .edit-input {
+        margin-bottom: 1;
     }
-
-    .close-button:hover {
-        background: $error-lighten-1;
+    #edit-buttons {
+        layout: horizontal;
+        padding: 0 2;
     }
     """
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, task: dict, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.settings = {
-            "notifications": True,
-            "autostart": False,
-            "theme": "light",
-            "reminder_time": "15",
-            "sound_enabled": True,
-            "default_view": "calendar",
-            "week_start": "monday",
-            "time_format": "24h",
-            "show_completed": True,
-            "default_duration": "30",
-            "working_hours_start": "09:00",
-            "working_hours_end": "17:00"
-        }
+        self.task_data = task
 
     def compose(self) -> ComposeResult:
-        with Container(id="settings-container"):
-            yield Static("Settings", id="settings-header")
-
-            with VerticalScroll(id="settings-content"):
-                # Notifications setting
-                with Container(classes="setting-item"):
-                    yield Static("🔔 Enable Notifications", classes="setting-label")
-                    with Horizontal(classes="checkbox-setting"):
-                        yield Button("ON" if self.settings["notifications"] else "OFF",
-                                   id="toggle-notifications", classes="settings-button")
-
-                # Autostart setting
-                with Container(classes="setting-item"):
-                    yield Static("🚀 Start on Boot", classes="setting-label")
-                    with Horizontal(classes="checkbox-setting"):
-                        yield Button("ON" if self.settings["autostart"] else "OFF",
-                                   id="toggle-autostart", classes="settings-button")
-
-                # Theme setting
-                with Container(classes="setting-item"):
-                    yield Static("🎨 Theme", classes="setting-label")
-                    with Horizontal(classes="setting-control"):
-                        yield Button(self.settings["theme"].title(), id="theme-button", classes="settings-button")
-
-                # Reminder time setting
-                with Container(classes="setting-item"):
-                    yield Static("⏰ Default Reminder Time (minutes)", classes="setting-label")
-                    with Horizontal(classes="setting-control"):
-                        yield Button(f"{self.settings['reminder_time']} min",
-                                   id="reminder-time-button", classes="settings-button")
-
-                # Sound notifications setting
-                with Container(classes="setting-item"):
-                    yield Static("🔊 Sound Notifications", classes="setting-label")
-                    with Horizontal(classes="checkbox-setting"):
-                        yield Button("ON" if self.settings["sound_enabled"] else "OFF",
-                                   id="toggle-sound", classes="settings-button")
-
-                # Default view setting
-                with Container(classes="setting-item"):
-                    yield Static("📅 Default View", classes="setting-label")
-                    with Horizontal(classes="setting-control"):
-                        yield Button(self.settings["default_view"].title(), id="view-button", classes="settings-button")
-
-                # Week start setting
-                with Container(classes="setting-item"):
-                    yield Static("📆 Week Starts On", classes="setting-label")
-                    with Horizontal(classes="setting-control"):
-                        yield Button(self.settings["week_start"].title(), id="week-start-button", classes="settings-button")
-
-                # Time format setting
-                with Container(classes="setting-item"):
-                    yield Static("🕐 Time Format", classes="setting-label")
-                    with Horizontal(classes="setting-control"):
-                        yield Button(self.settings["time_format"].upper(), id="time-format-button", classes="settings-button")
-
-                # Show completed tasks setting
-                with Container(classes="setting-item"):
-                    yield Static("✅ Show Completed Tasks", classes="setting-label")
-                    with Horizontal(classes="checkbox-setting"):
-                        yield Button("ON" if self.settings["show_completed"] else "OFF",
-                                   id="toggle-completed", classes="settings-button")
-
-                # Default task duration setting
-                with Container(classes="setting-item"):
-                    yield Static("⏱️ Default Task Duration (minutes)", classes="setting-label")
-                    with Horizontal(classes="setting-control"):
-                        yield Button(f"{self.settings['default_duration']} min",
-                                   id="duration-button", classes="settings-button")
-
-                # Working hours start setting
-                with Container(classes="setting-item"):
-                    yield Static("🌅 Working Hours Start", classes="setting-label")
-                    with Horizontal(classes="setting-control"):
-                        yield Button(self.settings["working_hours_start"],
-                                   id="work-start-button", classes="settings-button")
-
-                # Working hours end setting
-                with Container(classes="setting-item"):
-                    yield Static("🌇 Working Hours End", classes="setting-label")
-                    with Horizontal(classes="setting-control"):
-                        yield Button(self.settings["working_hours_end"],
-                                   id="work-end-button", classes="settings-button")
-
-            with Horizontal(id="settings-footer"):
-                yield Button("Save", id="save-settings", classes="settings-button")
-                yield Button("Close", id="close-settings", classes="close-button")
+        with Container(id="edit-modal-container"):
+            yield Static("Edit Task", id="edit-modal-title")
+            with Container(id="edit-form"):
+                yield Label("Title:")
+                yield Input(value=self.task_data["title"], id="edit-title", classes="edit-input")
+                yield Label("Date (YYYY-MM-DD HH:MM):")
+                yield Input(value=self.task_data["date_time"].split(":00")[0], id="edit-datetime", classes="edit-input")
+                yield Label("Status:")
+                yield Input(value=self.task_data["status"], id="edit-status", classes="edit-input")
+            with Horizontal(id="edit-buttons"):
+                yield Button("Save", variant="success", id="save-edit")
+                yield Button("Cancel", variant="default", id="cancel-edit")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Handle settings button presses"""
-        button_id = event.button.id
-
-        if button_id == "toggle-notifications":
-            self.settings["notifications"] = not self.settings["notifications"]
-            self.refresh_setting_button(button_id, "ON" if self.settings["notifications"] else "OFF")
-
-        elif button_id == "toggle-autostart":
-            self.settings["autostart"] = not self.settings["autostart"]
-            self.refresh_setting_button(button_id, "ON" if self.settings["autostart"] else "OFF")
-
-        elif button_id == "theme-button":
-            current_theme = self.settings["theme"]
-            themes = ["light", "dark", "auto"]
-            current_index = themes.index(current_theme)
-            next_index = (current_index + 1) % len(themes)
-            self.settings["theme"] = themes[next_index]
-            self.refresh_setting_button(button_id, self.settings["theme"].title())
-
-        elif button_id == "reminder-time-button":
-            current_time = int(self.settings["reminder_time"])
-            times = [5, 10, 15, 30, 60]
-            current_index = times.index(current_time) if current_time in times else 2
-            next_index = (current_index + 1) % len(times)
-            self.settings["reminder_time"] = str(times[next_index])
-            self.refresh_setting_button(button_id, f"{self.settings['reminder_time']} min")
-
-        elif button_id == "toggle-sound":
-            self.settings["sound_enabled"] = not self.settings["sound_enabled"]
-            self.refresh_setting_button(button_id, "ON" if self.settings["sound_enabled"] else "OFF")
-
-        elif button_id == "view-button":
-            current_view = self.settings["default_view"]
-            views = ["calendar", "list"]
-            current_index = views.index(current_view)
-            next_index = (current_index + 1) % len(views)
-            self.settings["default_view"] = views[next_index]
-            self.refresh_setting_button(button_id, self.settings["default_view"].title())
-
-        elif button_id == "week-start-button":
-            current_start = self.settings["week_start"]
-            starts = ["sunday", "monday"]
-            current_index = starts.index(current_start)
-            next_index = (current_index + 1) % len(starts)
-            self.settings["week_start"] = starts[next_index]
-            self.refresh_setting_button(button_id, self.settings["week_start"].title())
-
-        elif button_id == "time-format-button":
-            current_format = self.settings["time_format"]
-            formats = ["12h", "24h"]
-            current_index = formats.index(current_format)
-            next_index = (current_index + 1) % len(formats)
-            self.settings["time_format"] = formats[next_index]
-            self.refresh_setting_button(button_id, self.settings["time_format"].upper())
-
-        elif button_id == "toggle-completed":
-            self.settings["show_completed"] = not self.settings["show_completed"]
-            self.refresh_setting_button(button_id, "ON" if self.settings["show_completed"] else "OFF")
-
-        elif button_id == "duration-button":
-            current_duration = int(self.settings["default_duration"])
-            durations = [15, 30, 45, 60, 90, 120]
-            current_index = durations.index(current_duration) if current_duration in durations else 1
-            next_index = (current_index + 1) % len(durations)
-            self.settings["default_duration"] = str(durations[next_index])
-            self.refresh_setting_button(button_id, f"{self.settings['default_duration']} min")
-
-        elif button_id == "work-start-button":
-            current_start = self.settings["working_hours_start"]
-            start_times = ["06:00", "07:00", "08:00", "09:00", "10:00"]
-            current_index = start_times.index(current_start) if current_start in start_times else 3
-            next_index = (current_index + 1) % len(start_times)
-            self.settings["working_hours_start"] = start_times[next_index]
-            self.refresh_setting_button(button_id, self.settings["working_hours_start"])
-
-        elif button_id == "work-end-button":
-            current_end = self.settings["working_hours_end"]
-            end_times = ["16:00", "17:00", "18:00", "19:00", "20:00"]
-            current_index = end_times.index(current_end) if current_end in end_times else 1
-            next_index = (current_index + 1) % len(end_times)
-            self.settings["working_hours_end"] = end_times[next_index]
-            self.refresh_setting_button(button_id, self.settings["working_hours_end"])
-
-        elif button_id == "save-settings":
-            # Here you would typically save settings to a config file or database
-            # For now, just show a confirmation
-            self.notify("Settings saved successfully!")
-
-        elif button_id == "close-settings":
-            # Properly dismiss the settings modal
-            try:
-                self.dismiss()
-            except Exception as e:
-                # Fallback: try to pop screen if dismiss fails
-                try:
-                    self.app.pop_screen()
-                except Exception:
-                    pass  # Last resort - do nothing if all else fails
-
-    def refresh_setting_button(self, button_id: str, new_label: str):
-        """Update a setting button's label"""
-        button = self.query_one(f"#{button_id}", Button)
-        button.label = new_label
+        if event.button.id == "save-edit":
+            title = self.query_one("#edit-title", Input).value
+            date_time_str = self.query_one("#edit-datetime", Input).value + ":00"
+            status = self.query_one("#edit-status", Input).value
+            
+            with Database() as db:
+                db.update_task(
+                    task_id=self.task_data["id"],
+                    title=title,
+                    date_time=date_time_str,
+                    status=status,
+                )
+            self.dismiss(True)
+        elif event.button.id == "cancel-edit":
+            self.dismiss(False)
 
 
 class DateButton(Button):
@@ -630,8 +453,12 @@ class CalendarScreen(Screen):
             date_tasks = self.all_tasks.get(date_str, [])
 
             # Open modal with tasks for this date
+            def modal_callback(refresh: bool):
+                if refresh:
+                    self.refresh_calendar()
+
             modal = TaskModal(date_tasks, selected_date)
-            self.app.push_screen(modal)
+            self.app.push_screen(modal, modal_callback)
         elif event.button.id in ["prev-month", "next-month"]:
             # Handle navigation buttons using action methods
             if event.button.id == "prev-month":

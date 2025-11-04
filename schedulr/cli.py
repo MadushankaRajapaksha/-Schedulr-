@@ -20,7 +20,8 @@ from rich.console import Console
 from pyfiglet import figlet_format
 
 from .core import Database
-from .screens import CalendarScreen , SettingsModal
+from .screens import CalendarScreen  
+from .notifier import Notifier
 import random
 
 import sqlite3
@@ -62,24 +63,22 @@ TEST_TASKS_DATA = [
     }
 ]
 
-
+# title, date_time, status
 def map_tasks(db_data):
+    """Map database tuple data to list of dictionaries"""
     tasks = []
-    for i in db_data:
-        tasks.append(
-            {
+    for i in reversed(db_data):
+        # If it's already a dictionary (from your example format), use it directly
+        if isinstance(i, dict):
+            tasks.append(i)
+        else:
+            # If it's a tuple from the database query, map it
+            tasks.append({
                 "id": i[0],
                 "title": i[1],
                 "date_time": i[2],
-                "repeat_type": i[3],
-                "start_date": i[4],
-                "end_date": i[5],
-                "day_of_week": i[6],
-                "day_of_month": i[7],
-                "status": i[8],
-            }
-        )
-
+                "status": i[3],
+            })
     return tasks
 
 
@@ -266,6 +265,8 @@ class Home(App):
         self.current_page = "home"
 
         self.db = Database()
+        self.notifier = Notifier(check_interval=1)  # Check every 1 second for real-time notifications
+        self.notifier.start()  # Start the background notification checker
         self.tasks = self.db.get_all_tasks()
 
         self.search_query = ""
@@ -279,7 +280,7 @@ class Home(App):
                 yield NavButton("➕", "Add Task", id="nav-add", classes="nav-button")
                 yield NavButton("📅", "Calendar", id="nav-calendar", classes="nav-button")
                  
-                yield NavButton("⚙️", "Settings", id="nav-settings", classes="nav-button")
+                # yield NavButton("⚙️", "Settings", id="nav-settings", classes="nav-button")
 
             with Vertical(id="right-content"):
                 # with Vertical(id="welcome-section"):
@@ -321,9 +322,9 @@ class Home(App):
     async def open_calendar(self):
         self.push_screen(CalendarScreen())
         
-    @on(Button.Pressed, "#nav-settings")
-    async def open_settings(self):
-        self.push_screen(SettingsModal())
+    # @on(Button.Pressed, "#nav-settings")
+    # async def open_settings(self):
+    #     self.push_screen(SettingsModal())
 
     # handle  add new task
 
@@ -341,7 +342,10 @@ class Home(App):
                     # IMPORTANT: Reload tasks from database to get fresh data with new task
                     self.tasks = map_tasks(self.db.get_all_tasks())
                     self.refresh_task_list()
-
+                
+                    # Send new task notification
+                    self.notifier.notify_new_task(new_task['title'])
+                
                     # Show success notification
                     self.notify(f"✅ Task '{new_task['title']}' added successfully!")
                 else:
@@ -418,6 +422,13 @@ class Home(App):
         if event.input.id == "sInput":
             self.search_query = event.value.strip()
             self.refresh_task_list()
+            
+    def on_unmount(self) -> None:
+        """Clean up resources when app is closed"""
+        if hasattr(self, 'notifier') and self.notifier:
+            self.notifier.stop()
+        if hasattr(self, 'db') and self.db:
+            self.db.close()
  
 from typing import Optional, Dict, Any
 
@@ -458,12 +469,7 @@ class AddTaskModal(ModalScreen[Optional[Dict[str, Any]]]):
         margin-bottom: 1;
     }
     
-    .form-group-row {
-        height: auto;
-        padding: 0;
-        margin-bottom: 1;
-        layout: horizontal;
-    }
+     
     
     .form-field {
         width: 1fr;
@@ -586,20 +592,10 @@ class AddTaskModal(ModalScreen[Optional[Dict[str, Any]]]):
                         )
 
                     # AM/PM Selector
-                    with Vertical(classes="form-field"):
-                        yield Label("🕐 Time Format:", classes="form-label")
-                        yield Select(
-                            [
-                                ("AM", "AM"),
-                                ("PM", "PM"),
-                            ],
-                            prompt="AM/PM",
-                            id="select-am-pm",
-                            classes="form-select",
-                        )
+                     
 
             # Buttons
-            with Horizontal(id="button-group"):
+            with Horizontal():
                 yield Button(
                     "✅ Save Task", id="btn-save", classes="modal-button btn-save"
                 )
@@ -617,10 +613,7 @@ class AddTaskModal(ModalScreen[Optional[Dict[str, Any]]]):
             hour_input = self.query_one("#input-hour", Input).value.strip()
             minute_input = self.query_one("#input-minute", Input).value.strip()
 
-            # Get AM/PM selection
-            am_pm_select = self.query_one("#select-am-pm", Select)
-            am_pm = am_pm_select.value if am_pm_select.value != Select.BLANK else "AM"
-
+             
             # Validate required fields
             if not title:
                 self.app.notify("⚠️ Please enter a task title!", severity="warning")
@@ -652,14 +645,9 @@ class AddTaskModal(ModalScreen[Optional[Dict[str, Any]]]):
                 self.app.notify("⚠️ Invalid time format! Use numbers for hour and minute.", severity="error")
                 return
 
-            # Convert to 24-hour format for database
-            db_hour = hour
-            if am_pm == "PM" and hour != 12:
-                db_hour = hour + 12
-            elif am_pm == "AM" and hour == 12:
-                db_hour = 0
+             
 
-            date_time = f"{date_input} {db_hour:02d}:{minute:02d}:00"
+            date_time = f"{date_input} {hour:02d}:{minute:02d}:00"
 
             new_task = {
                 "title": title,
@@ -676,6 +664,10 @@ class AddTaskModal(ModalScreen[Optional[Dict[str, Any]]]):
 # TODO:
 
 
- 
-app = Home().run()
+def run_app():
+    """Entry point function for the CLI app"""
+    return Home().run()
+
+# Create app instance for entry point
+app = run_app
     
