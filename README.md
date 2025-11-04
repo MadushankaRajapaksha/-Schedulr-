@@ -4,22 +4,19 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows-lightgrey.svg)]()
 
-> A beautiful, feature-rich terminal-based task scheduler with natural language input, calendar visualization, system tray integration, and desktop notifications.
+> A beautiful, feature-rich terminal-based task scheduler with a calendar visualization and desktop notifications.
 
 ## Features
 
 ### Core Functionality
-- **Natural Language Input**: Create tasks using human-friendly date/time expressions
 - **Beautiful Terminal Interface**: Rich, colorful TUI built with Textual framework
 - **SQLite Database**: Persistent storage for all your tasks
 - **Calendar View**: Visual monthly calendar with task indicators
 - **Search & Filter**: Quickly find tasks by title
-- **Task Statistics**: Overview of pending, completed, and recurring tasks
+- **Task Statistics**: Overview of pending and completed tasks
 
 ### Advanced Features
-- **System Tray Integration**: Run in background with tray icon
 - **Desktop Notifications**: Get notified when tasks are due
-- **Auto-start Support**: Automatically launch on Windows startup
 - **Settings Management**: Customizable preferences and themes
 - **Responsive Design**: Adaptive layout for different terminal sizes
 
@@ -28,15 +25,10 @@
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Usage](#usage)
-- [Command Line Options](#command-line-options)
-- [Configuration](#configuration)
 - [Task Management](#task-management)
 - [Calendar View](#calendar-view)
 - [Settings](#settings)
-- [System Tray Mode](#system-tray-mode)
-- [Auto-start Setup](#auto-start-setup)
 - [Development](#development)
-- [API Reference](#api-reference)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [License](#license)
@@ -46,8 +38,7 @@
 ### Prerequisites
 
 - Python 3.8 or higher
-- Windows operating system
-- Terminal with color support (recommended)
+- A terminal with color support (recommended)
 
 ### Install from PyPI (Recommended)
 
@@ -69,7 +60,7 @@ pip install -e .
 ### Verify Installation
 
 ```bash
-schedulr --help
+schedulr
 ```
 
 ## Quick Start
@@ -79,9 +70,6 @@ schedulr --help
 ```bash
 # Launch the main interface
 schedulr
-
-# Or run as Python module
-python -m schedulr
 ```
 
 ### Create Your First Task
@@ -91,18 +79,8 @@ python -m schedulr
 3. Fill in the task details:
    - **Task Title**: What needs to be done
    - **Date**: When it should happen (YYYY-MM-DD format)
-   - **Time**: Hour, minute, and AM/PM
+   - **Time**: Hour and minute
 4. Click **✅ Save Task**
-
-### Example: Add a Meeting Task
-
-```
-📝 Task Title: Team Meeting
-📅 Date: 2024-01-15
-⏰ Hour: 14
-⏰ Minute: 30
-🕐 Time Format: PM
-```
 
 ## Usage
 
@@ -122,67 +100,7 @@ python -m schedulr
 
 ### Search Functionality
 
-Use the search bar in the Home view to filter tasks by title:
-
-```bash
-Search by task title: meeting
-```
-
-Shows all tasks containing "meeting" in their title.
-
-## Command Line Options
-
-```bash
-# Show help information
-schedulr --help
-
-# Run in system tray mode (recommended for notifications)
-schedulr --tray
-
-# Manage auto-start on Windows
-schedulr --autostart add     # Enable auto-start
-schedulr --autostart remove  # Disable auto-start
-schedulr --autostart check   # Check auto-start status
-```
-
-### System Tray Mode
-
-```bash
-# Start in background with notifications
-schedulr --tray
-```
-
-Features in tray mode:
-- Application runs in background
-- Desktop notifications for due tasks
-- System tray icon for quick access
-- Right-click menu for basic controls
-
-## Configuration
-
-### Settings Options
-
-Access settings through the ⚙️ button in the Calendar view:
-
-#### Notification Settings
-- **Enable Notifications**: Desktop alerts for due tasks
-- **Default Reminder Time**: Minutes before due time to notify
-- **Sound Notifications**: Audio alerts (when supported)
-
-#### Display Settings
-- **Theme**: Light, dark, or auto theme selection
-- **Time Format**: 12-hour or 24-hour format
-- **Week Start**: Monday or Sunday as week start
-- **Show Completed Tasks**: Display finished tasks in lists
-
-#### Task Settings
-- **Default Task Duration**: Default time allocation for tasks
-- **Working Hours**: Define your typical work schedule
-- **Auto-start**: Launch application on system startup
-
-### Configuration File
-
-Settings are stored in the application's database and persist between sessions.
+Use the search bar in the Home view to filter tasks by title.
 
 ## Task Management
 
@@ -193,21 +111,19 @@ Tasks can be created through the **➕ Add Task** modal with the following field
 - **Title**: Task description (required)
 - **Date**: Target date in YYYY-MM-DD format
 - **Time**: Hour (0-23) and minute (0-59)
-- **AM/PM**: Time period for 12-hour format
 
 ### Task Status
 
 Tasks have the following status levels:
 - **⏳ Pending**: Not yet completed
 - **✅ Completed**: Finished tasks
-- **🔄 Recurring**: Repeating tasks (future feature)
 
 ### Task Operations
 
-- **View**: Click on task cards to see details
-- **Edit**: Modify task details (planned feature)
-- **Delete**: Remove tasks (planned feature)
-- **Mark Complete**: Change status to completed
+- **View**: Click on a date in the calendar to see tasks for that day.
+- **Edit**: Modify task details.
+- **Delete**: Remove tasks.
+- **Mark Complete**: Change status to completed.
 
 ## Calendar View
 
@@ -225,62 +141,6 @@ The calendar view displays:
 - **Next ▶**: Go to next month
 - **Keyboard**: Use arrow keys for quick navigation
 - **Click Days**: Click on calendar days to view tasks
-
-### Task Indicators
-
-- **Highlighted Days**: Days containing tasks
-- **Task Count**: Shows number of tasks per day
-- **Task Preview**: First 2 tasks shown, with "+X more" indicator
-
-## System Tray Mode
-
-### Background Operation
-
-```bash
-schedulr --tray
-```
-
-Tray mode features:
-- **Minimized Operation**: Runs without visible window
-- **Background Monitoring**: Continuously checks for due tasks
-- **Desktop Notifications**: Alerts when tasks are due
-- **Quick Access**: Right-click tray icon for menu options
-
-### Tray Menu Options
-
-- **Open Schedulr**: Show the main application window
-- **Exit**: Close the application and stop notifications
-
-### Notification System
-
-- **Due Task Alerts**: Notified when tasks reach their scheduled time
-- **Customizable Timing**: Set reminder time in settings
-- **Persistent Notifications**: Remain visible for 10 seconds
-- **Task Context**: Shows task title and type in notifications
-
-## Auto-start Setup
-
-### Windows Auto-start
-
-Enable Schedulr to launch automatically when Windows starts:
-
-```bash
-# Enable auto-start
-schedulr --autostart add
-
-# Disable auto-start
-schedulr --autostart remove
-
-# Check status
-schedulr --autostart check
-```
-
-### Auto-start Process
-
-1. Creates a batch file in Windows startup folder
-2. Uses `pythonw.exe` to run without console window
-3. Automatically starts in system tray mode
-4. Begins monitoring for due tasks immediately
 
 ## Development
 
@@ -309,130 +169,26 @@ python -m schedulr
 
 ```
 schedulr/
-├── __main__.py          # Entry point and CLI argument parsing
+├── __main__.py          # Entry point
 ├── cli.py              # Main Textual TUI application
 ├── core.py             # Database operations and task management
 ├── screens.py          # Calendar screen and modal screens
-├── notifier.py         # Background notification system
-├── tray.py            # System tray integration
-└── autostart.py       # Windows auto-start management
+└── notifier.py         # Background notification system
 
 data.db                # SQLite database (created automatically)
 README.md             # This file
 pyproject.toml        # Project configuration and dependencies
 ```
 
-### Key Components
-
-#### Database Layer (`core.py`)
-- SQLite database management
-- Task CRUD operations
-- Data validation and error handling
-
-#### User Interface (`cli.py`)
-- Textual-based terminal interface
-- Task display and management
-- Search functionality
-- Modal forms for task creation
-
-#### Calendar System (`screens.py`)
-- Monthly calendar visualization
-- Task indicators and previews
-- Navigation and date selection
-
-#### Notification Engine (`notifier.py`)
-- Background task monitoring
-- Desktop notification delivery
-- Configurable check intervals
-
 ### Dependencies
 
 ```toml
 [project]
 dependencies = [
-    "rich",           # Beautiful terminal formatting
-    "typer",          # CLI framework
-    "dateparser",     # Natural language date parsing
-    "schedule",       # Task scheduling
-    "plyer",         # Desktop notifications
-    "pystray",       # System tray icon
-    "Pillow",        # Image processing for icons
-    "textual"        # Terminal user interface framework
+    "rich",
+    "textual"
 ]
 ```
-
-## API Reference
-
-### Core Classes
-
-#### Database
-
-```python
-from schedulr.core import Database
-
-# Initialize database connection
-db = Database(db_path="data.db")
-
-# Create a new task
-result = db.create_task(
-    title="Team Meeting",
-    date_time="2024-01-15 14:30:00",
-    status="Pending"
-)
-
-# Get all tasks
-tasks = db.get_all_tasks()
-
-# Update task status
-db.update_task(task_id=1, status="Completed")
-
-# Delete a task
-db.delete_task(task_id=1)
-```
-
-#### Notifier
-
-```python
-from schedulr.notifier import Notifier
-
-# Create notifier instance
-notifier = Notifier(check_interval=60)  # Check every 60 seconds
-
-# Start background monitoring
-notifier.start()
-
-# Stop monitoring
-notifier.stop()
-```
-
-#### System Tray
-
-```python
-from schedulr.tray import SystemTrayApp
-
-# Create and run tray application
-tray_app = SystemTrayApp()
-tray_app.run()
-```
-
-### Textual App Structure
-
-#### Home Screen
-
-Main application interface with:
-- Navigation sidebar
-- Task statistics
-- Search functionality
-- Task cards display
-- Modal screens for task creation
-
-#### Calendar Screen
-
-Monthly calendar view featuring:
-- Month navigation
-- Day highlighting
-- Task indicators
-- Click-to-view task details
 
 ## Troubleshooting
 
@@ -445,18 +201,6 @@ python --version  # Should be 3.8+
 
 # Verify installation
 pip show schedulr
-
-# Check for missing dependencies
-pip install -r requirements.txt
-```
-
-#### No Notifications
-```bash
-# Check if running in tray mode
-schedulr --tray
-
-# Verify notification permissions
-# Check Windows notification settings
 ```
 
 #### Database Issues
@@ -471,46 +215,9 @@ schedulr
 - Try resizing terminal window
 - Check font supports Unicode characters
 
-### Debug Mode
-
-Run with verbose output for troubleshooting:
-
-```bash
-# Enable debug logging (if available)
-set SCHEDULR_DEBUG=1
-schedulr
-```
-
-### Getting Help
-
-1. Check the Issues page for known problems
-2. Create a new issue with:
-   - Python version (`python --version`)
-   - Operating system
-   - Steps to reproduce the problem
-   - Full error messages
-
 ## Contributing
 
 We welcome contributions! Please see our Contributing Guide for details.
-
-### Development Workflow
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Add tests if applicable
-5. Run the test suite
-6. Commit your changes (`git commit -m 'Add amazing feature'`)
-7. Push to the branch (`git push origin feature/amazing-feature`)
-8. Open a Pull Request
-
-### Code Style
-
-- Follow PEP 8 for Python code
-- Use type hints for function parameters and return values
-- Add docstrings to all public functions and classes
-- Keep line length under 88 characters
 
 ## License
 
@@ -520,21 +227,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - [Textual](https://textual.textualize.io/) for the beautiful TUI framework
 - [Rich](https://rich.readthedocs.io/) for enhanced terminal formatting
-- [PyStray](https://github.com/moses-palmer/pystray) for system tray functionality
-- [Plyer](https://plyer.readthedocs.io/) for cross-platform desktop notifications
-
-## Support
-
-- **Documentation**: This README and inline code documentation
-- **Issues**: Bug reports and feature requests via Issues
-- **Discussions**: Community discussions via Discussions
-
----
-
-<div align="center">
-
-**Made with ❤️ for developers who love terminal applications**
-
-[⭐ Star this project](https://github.com/your-username/schedulr/stargazers) | [🐛 Report Bug](https://github.com/your-username/schedulr/issues) | [💡 Request Feature](https://github.com/your-username/schedulr/issues)
-
-</div>
