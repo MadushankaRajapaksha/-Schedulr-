@@ -23,9 +23,6 @@ class TaskNotifier:
         self.thread = None
         self.get_tasks_func = None
         self.check_interval = 30
-    def notify_new_task(self, title):
-        """Send a notification for a newly created task."""
-        notify(f"New Task Added: {title}")
     
     def check_and_notify(self, tasks):
         """
@@ -36,11 +33,6 @@ class TaskNotifier:
             tasks: List of task dictionaries with 'id', 'title', 'date_time', and 'status'
         """
         now = datetime.now()
-        
-        if tasks == [] or tasks == None or tasks == "":
-            notify("no data")
-        else:
-            notify("data")
         
         for task in tasks:
             # Use task ID for tracking instead of index
@@ -58,7 +50,7 @@ class TaskNotifier:
                 time_diff = (task_time - now).total_seconds()
                 
                 # Notify if task is due within the next minute (0 to 60 seconds)
-                if -60 < time_diff <= 60:
+                if 0 <= time_diff <= 60:
                     notify(f"Task Due: {task['title']}")
                     print(f"[{now.strftime('%H:%M:%S')}] Notified: {task['title']}")
                     
@@ -103,15 +95,16 @@ class TaskNotifier:
         """
         if self.running:
             print("Task Notifier is already running.")
-            
             return
+        
+        notify("notifyer started!")
         
         self.get_tasks_func = get_tasks_func
         self.check_interval = check_interval
+        self.running = True
         
         # Start the notifier in a daemon thread so it stops when the app closes
         self.thread = threading.Thread(target=self._run_loop, daemon=True)
-        self.running = True
         self.thread.start()
         
         print(f"Task Notifier started with {check_interval}s check interval.")

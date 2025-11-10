@@ -3,3 +3,5 @@ typer
 dateparser
 schedule
 plyer
+pystray
+Pillow

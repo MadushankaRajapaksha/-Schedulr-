@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "schedulr"
-version = "0.0.4"
+version = "0.0.5"
 description = "A smart terminal scheduler with natural language input and ASCII calendar visualization."
 readme = "README.md"
 authors = [
@@ -23,4 +23,4 @@ dependencies = [
 ]
 
 [project.scripts]
-schedulr = "schedulr.cli:app"
+schedulr = "schedulr.cli:main"

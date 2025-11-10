@@ -1,2 +1,2 @@
 [console_scripts]
-schedulr = schedulr.cli:app
+schedulr = schedulr.cli:main

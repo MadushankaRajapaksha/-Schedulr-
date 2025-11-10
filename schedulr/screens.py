@@ -37,7 +37,8 @@ class TaskModal(ModalScreen):
     
     #modal-container {
         width: 100%;
-        height: 100%;
+        height: auto;
+        max-height:100%;
         background: $surface;
         border: thick $primary;
         padding: 1;
@@ -59,12 +60,13 @@ class TaskModal(ModalScreen):
     
     .task-item {
         layout: horizontal;
-         
         padding: 1;
-         
+        height: auto;
+        min-height: 4;
         background: $panel;
-        border: solid $primary 50%;
+        border: solid $primary;
         align: center middle;
+        margin-bottom: 1;
     }
     
     .task-item.-completed {
@@ -422,7 +424,7 @@ class CalendarScreen(Screen):
         # Calendar header with navigation
         with Horizontal(id="calendar-nav"):
             yield Button("🏠 Home", id="home-button", classes="nav-button")
-            yield Button("⚙️ Settings", id="settings-button", classes="nav-button")
+            # yield Button("⚙️ Settings", id="settings-button", classes="nav-button")
             yield Button("◀ Prev", id="prev-month", classes="nav-button")
             yield Static(
                 f"{self.current_date.strftime('%B %Y')}",
@@ -476,14 +478,7 @@ class CalendarScreen(Screen):
         except Exception:
             self.app.exit()
 
-    def action_open_settings(self) -> None:
-        """Action to open settings modal"""
-        try:
-            settings_modal = SettingsModal()
-            self.app.push_screen(settings_modal)
-        except Exception as e:
-            self.notify(f"Error opening settings: {str(e)}", severity="error")
-
+     
     def action_prev_month(self) -> None:
         """Action to go to previous month"""
         if self.current_date.month == 1:
