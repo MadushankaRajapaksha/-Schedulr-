@@ -1,26 +1,47 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "schedulr"
-version = "0.0.5"
+version = "0.0.6"
 description = "A smart terminal scheduler with natural language input and ASCII calendar visualization."
 readme = "README.md"
 authors = [
-  { name="madushnaka rajapakshe", email="your@email.com" }
+  { name="madushnaka rajapakshe", email="MadushankaRajapaksha999@gmail.com" }
 ]
 license = { text = "MIT" }
 requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
 dependencies = [
-   "rich",
-   "typer",
-   "dateparser",
-   "schedule",
-   "plyer",
-   "pystray",
-   "Pillow"
+   "rich>=10.0.0",
+   "typer>=0.9.0",
+   "textual>=0.1.0",
+   "pyfiglet>=0.8.0"
+]
+
+[project.optional-dependencies]
+# Enhanced notifications (optional fallback if native methods fail)
+notifications = [
+   "plyer>=2.0.0"
+]
+
+# All optional features
+all = [
+   "plyer>=2.0.0"
 ]
 
 [project.scripts]
 schedulr = "schedulr.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/MadushankaRajapaksha/-Schedulr-"
+"Bug Tracker" = "https://github.com/MadushankaRajapaksha/-Schedulr-/issues"
+
+[tool.setuptools]
+packages = ["schedulr"]
